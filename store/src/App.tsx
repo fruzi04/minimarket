@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Product } from './types/product';
 import { getProducts, searchProducts } from './api/products';
 import { ProductList } from './components/ProductList';
-import { CartModal } from './components/CartModal';
+import { CartModal } from './components/CartModal/CartModal';
 import './App.css';
 
 export function App() {

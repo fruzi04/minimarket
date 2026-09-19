@@ -1,4 +1,3 @@
-/* Главный контейнер */
 .app-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -39,21 +38,6 @@
 
 .search-input:focus {
   border-color: #007bff;
-}
-
-/* Кнопка корзины */
-.cart-btn {
-  background-color: #007bff;
-  color: #ffffff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.cart-btn:hover {
-  background-color: #0056b3;
 }
 
 /* Сетка карточек товаров */
@@ -124,72 +108,11 @@
   color: #555;
 }
 
-/* Выезжающая корзина */
-.cart-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: flex-end;
-  z-index: 1000;
-}
-
-.cart-modal {
-  background: #ffffff;
-  width: 380px;
-  height: 100vh;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-.cart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
-}
-
 .close-btn {
   background: none;
   border: none;
   font-size: 1.4rem;
   cursor: pointer;
-}
-
-.cart-body {
-  flex: 1;
-  overflow-y: auto;
-  margin-top: 15px;
-}
-
-.cart-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
-
-.cart-item img {
-  width: 50px;
-  height: 50px;
-  object-fit: contain;
-}
-
-.cart-item-info {
-  flex: 1;
-}
-
-.cart-item-info h4 {
-  font-size: 0.85rem;
-  margin-bottom: 4px;
 }
 
 .remove-btn {
@@ -199,12 +122,6 @@
   padding: 4px 8px;
   border-radius: 4px;
   cursor: pointer;
-}
-
-.cart-footer {
-  border-top: 1px solid #ddd;
-  padding-top: 15px;
-  background: white;
 }
 
 .checkout-btn {
