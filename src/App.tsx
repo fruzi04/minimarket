@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Product } from './types/product';
-import { getProducts, searchProducts } from './api/products';
+import { getProducts, searchProducts, getCategories, getProductsByCategory } from './api/products';
 import { ProductList } from './components/ProductList';
 import { CartModal } from './components/CartModal/CartModal';
 import './App.css';
@@ -11,22 +11,28 @@ export function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
 
-  // Поиск
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
 
-  // Пагинация 
   const [skip, setSkip] = useState<number>(0);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const LIMIT = 30;
 
+  // Загружаем список категорий при запуске
+  useEffect(() => {
+    getCategories().then(setCategories).catch(console.error);
+  }, []);
+
+  // 1. Debounce поиска с безопасным сбросом состояния
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch((prev) => {
-        
         if (prev !== searchQuery) {
-          setProducts([]);   
-          setSkip(0);        
+          setProducts([]);
+          setSkip(0);
           setHasMore(true);
           return searchQuery;
         }
@@ -37,17 +43,32 @@ export function App() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Загрузка товаров
+  // 2. Сброс списка и пагинации при смене категории
+  const handleCategoryChange = (cat: string) => {
+    setSelectedCategory(cat);
+    setProducts([]);
+    setSkip(0);
+    setHasMore(true);
+  };
+
+  // 3. Загрузка товаров (Учитывает и поиск, и категорию)
   useEffect(() => {
     const fetchItems = async () => {
       if (!hasMore && skip !== 0) return;
+
       setLoading(true);
       try {
         const trimmed = debouncedSearch.trim();
-        let newItems = [];
+        let newItems: Product[] = [];
 
         if (trimmed) {
           newItems = await searchProducts(trimmed, LIMIT, skip);
+          // Если также выбрана категория — фильтруем поиск
+          if (selectedCategory) {
+            newItems = newItems.filter((item) => item.category === selectedCategory);
+          }
+        } else if (selectedCategory) {
+          newItems = await getProductsByCategory(selectedCategory, LIMIT, skip);
         } else {
           newItems = await getProducts(LIMIT, skip);
         }
@@ -65,8 +86,9 @@ export function App() {
     };
 
     fetchItems();
-  }, [debouncedSearch, skip]);
+  }, [debouncedSearch, selectedCategory, skip]);
 
+  // 4. Бесконечный скролл
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -83,6 +105,7 @@ export function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loading, hasMore]);
 
+  // Корзина
   const handleAddToCart = (product: Product) => {
     setCart((prev = []) => [...prev, product]);
   };
@@ -100,27 +123,55 @@ export function App() {
   return (
     <div className="app-container">
       <header className="header">
-        <h1>🛒 Мини-Маркет</h1>
+        <h1 className="logo">🛒 <span className="logo-text">Маркет</span></h1>
 
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Поиск товаров..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+        <div className="search-filter-group">
+          {/* Поиск */}
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Поиск..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
 
-        <button className="cart-btn" onClick={() => setIsCartOpen(true)}>
-          Корзина ({cart?.length || 0})
+          {/* Обертка категорий (на смартфонах станет иконкой) */}
+          <div className={`category-wrapper ${selectedCategory ? 'active' : ''}`}>
+            <div className="category-icon">🏷️</div>
+            <select
+              className="category-select"
+              value={selectedCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+            >
+              <option value="">Все категории</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Кнопка корзины (на смартфонах скрывает текст и оставляет иконку с бейджем) */}
+        <button 
+          className="cart-btn" 
+          onClick={() => setIsCartOpen(true)}
+          aria-label="Корзина"
+        >
+          <span className="cart-icon">🛒</span>
+          <span className="cart-text">Корзина</span>
+          {(cart?.length || 0) > 0 && (
+            <span className="cart-badge">{cart.length}</span>
+          )}
         </button>
       </header>
 
       <main>
         <ProductList products={products} onAddToCart={handleAddToCart} />
-        
-        {/* Индикатор загрузки внизу списка */}
+
         {loading && <div className="loader">Загрузка...</div>}
-        
+
         {!loading && products?.length === 0 && (
           <div className="no-results">
             {debouncedSearch.trim()
